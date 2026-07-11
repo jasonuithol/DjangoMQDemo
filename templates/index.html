@@ -29,9 +29,12 @@
     table { width:100%; border-collapse:collapse; }
     th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); font-size:13px; }
     th { color:var(--muted); font-weight:600; }
+    td.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+              color:var(--muted); max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .badge { padding:2px 9px; border-radius:999px; font-size:12px; font-weight:600; text-transform:capitalize; }
     .badge-pending { background:rgba(245,158,11,.15); color:var(--amber); }
     .badge-synced  { background:rgba(34,197,94,.15);  color:var(--green); }
+    .badge-processed { background:rgba(34,197,94,.15); color:var(--green); }
     .badge-failed  { background:rgba(239,68,68,.15);  color:var(--red); }
     pre { white-space:pre-wrap; word-break:break-word; padding:10px 12px; border-radius:8px;
           font-size:12.5px; margin:12px 0 0; }
@@ -56,11 +59,13 @@
 
     const csrf = () => window.CSRF_TOKEN;
 
-    async function getOrders() {
-      const r = await fetch("/api/orders/", { headers: { Accept: "application/json" } });
+    async function getJson(url) {
+      const r = await fetch(url, { headers: { Accept: "application/json" } });
       const d = await r.json();
       return d.results || [];
     }
+    const getOrders = () => getJson("/api/orders/");
+    const getWebhookEvents = () => getJson("/api/webhook-events/");
 
     function Badge({ status }) {
       return html`<span className=${"badge badge-" + status}>${status}</span>`;
@@ -100,7 +105,7 @@
         </form>`;
     }
 
-    function WebhookPanel() {
+    function WebhookPanel({ onSent }) {
       const [secret, setSecret] = useState(window.PARTNER_SECRET);
       const [payload, setPayload] = useState('{\n  "event": "order.updated",\n  "id": "123"\n}');
       const [result, setResult] = useState(null);
@@ -116,6 +121,7 @@
           body: payload,
         });
         setResult({ status: r.status, body: await r.text() });
+        if (r.status === 202 && onSent) onSent();
       }
 
       return html`
@@ -155,10 +161,36 @@
         </div>`;
     }
 
+    function WebhookEventList({ events }) {
+      return html`
+        <div className="card">
+          <h2>Webhook events <span className="muted">— processed asynchronously</span></h2>
+          ${events.length === 0
+            ? html`<p className="muted">None received yet.</p>`
+            : html`
+            <table>
+              <thead><tr><th>Received</th><th>Status</th><th>Payload</th></tr></thead>
+              <tbody>
+                ${events.map((ev) => html`
+                  <tr key=${ev.id}>
+                    <td className="muted">${new Date(ev.received_at).toLocaleTimeString()}</td>
+                    <td><${Badge} status=${ev.processed ? "processed" : "pending"} /></td>
+                    <td className="mono">${JSON.stringify(ev.payload)}</td>
+                  </tr>`)}
+              </tbody>
+            </table>`}
+        </div>`;
+    }
+
     function App() {
       const [orders, setOrders] = useState([]);
+      const [events, setEvents] = useState([]);
       const refresh = useCallback(async () => {
-        try { setOrders(await getOrders()); } catch (e) { /* ignore transient errors */ }
+        try {
+          const [o, e] = await Promise.all([getOrders(), getWebhookEvents()]);
+          setOrders(o);
+          setEvents(e);
+        } catch (err) { /* ignore transient errors */ }
       }, []);
       useEffect(() => {
         refresh();
@@ -175,7 +207,8 @@
           <div className="cols">
             <div>
               <${OrderForm} onCreated=${refresh} />
-              <${WebhookPanel} />
+              <${WebhookPanel} onSent=${refresh} />
+              <${WebhookEventList} events=${events} />
             </div>
             <${OrderList} orders=${orders} />
           </div>

@@ -6,6 +6,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from integrations.factories import WebhookEventFactory
 from integrations.models import WebhookEvent
 
 pytestmark = pytest.mark.django_db
@@ -44,3 +45,15 @@ def test_webhook_persists_payload_and_enqueues(
     assert event.payload == {"event": "order.updated", "id": "123"}
     assert not event.processed
     delay.assert_called_once_with(event.pk)
+
+
+def test_list_webhook_events(api_client: APIClient) -> None:
+    WebhookEventFactory(processed=True)
+    WebhookEventFactory(processed=False)
+
+    resp = api_client.get("/api/webhook-events/")
+
+    assert resp.status_code == status.HTTP_200_OK
+    body = resp.json()
+    assert body["count"] == 2
+    assert set(body["results"][0]) == {"id", "payload", "processed", "received_at"}

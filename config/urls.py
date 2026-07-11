@@ -8,11 +8,13 @@ from rest_framework.routers import DefaultRouter
 from config.frontend import index
 from config.health import health
 from integrations.mock_partner import mock_partner_orders
+from integrations.views import WebhookEventViewSet
 from integrations.webhooks import partner_webhook
 from orders.views import OrderViewSet
 
 router = DefaultRouter()
 router.register("orders", OrderViewSet, basename="order")
+router.register("webhook-events", WebhookEventViewSet, basename="webhook-event")
 
 urlpatterns = [
     path("", index),

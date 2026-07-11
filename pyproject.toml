@@ -69,7 +69,7 @@ follow_imports = "skip"
 
 # factories subclass the now-untyped DjangoModelFactory base.
 [[tool.mypy.overrides]]
-module = ["orders.factories"]
+module = ["orders.factories", "integrations.factories"]
 disallow_subclassing_any = false
 
 [tool.django-stubs]
