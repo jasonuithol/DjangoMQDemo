@@ -10,3 +10,6 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # Faster hashing in tests.
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# Keep the partner URL deterministic for responses-stubbed tests, ignoring .env.
+PARTNER_API_BASE_URL = "https://partner.example.com"
