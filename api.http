@@ -1,0 +1,56 @@
+# REST Client requests (VS Code "humao.rest-client").
+# Start the stack first: `make up && make run`.
+
+@baseUrl = http://localhost:8000
+@secret = dev-secret-change-me
+
+### Health check -> {"status": "ok"}
+GET {{baseUrl}}/health/
+
+### Create an order -> 201
+# @name createOrder
+POST {{baseUrl}}/api/orders/
+Content-Type: application/json
+
+{
+  "customer_name": "Ada Lovelace",
+  "total_amount": "42.50"
+}
+
+### Create an order with an invalid amount -> 400
+POST {{baseUrl}}/api/orders/
+Content-Type: application/json
+
+{
+  "customer_name": "Bad Order",
+  "total_amount": "-5"
+}
+
+### List all orders (paginated)
+GET {{baseUrl}}/api/orders/
+
+### List orders filtered by status
+GET {{baseUrl}}/api/orders/?status=synced
+
+### Retrieve the order created above
+GET {{baseUrl}}/api/orders/{{createOrder.response.body.id}}/
+
+### Partner webhook — valid secret -> 202
+POST {{baseUrl}}/webhooks/partner/
+Content-Type: application/json
+X-Partner-Secret: {{secret}}
+
+{
+  "event": "order.updated",
+  "id": "123"
+}
+
+### Partner webhook — bad secret -> 401
+POST {{baseUrl}}/webhooks/partner/
+Content-Type: application/json
+X-Partner-Secret: wrong
+
+{
+  "event": "order.updated",
+  "id": "123"
+}

@@ -28,8 +28,10 @@ ps: ## Show container status
 logs: ## Tail logs from all services
 	$(COMPOSE) logs -f
 
-sh shell: ## Open a shell inside the app container
+sh: ## Open a shell inside the app container
 	$(COMPOSE) exec app bash
+
+shell: sh ## Alias for `sh`
 
 psql: ## Open a psql session against the platform DB
 	$(COMPOSE) exec postgres psql -U platform -d platform
@@ -49,6 +51,9 @@ flower: ## Flower task monitor on :5555
 
 migrate: ## Apply migrations
 	$(COMPOSE) exec app uv run python manage.py migrate
+
+superuser: ## Create a Django admin superuser
+	$(COMPOSE) exec app uv run python manage.py createsuperuser
 
 makemigrations: ## Generate migrations
 	$(COMPOSE) exec app uv run python manage.py makemigrations

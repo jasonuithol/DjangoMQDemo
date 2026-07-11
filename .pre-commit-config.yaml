@@ -1,0 +1,24 @@
+# Optional. Runs the quality gates inside the app container so tooling stays
+# off the host. Requires the stack to be up (`make up`) and pre-commit installed
+# on the host (`uv tool install pre-commit && pre-commit install`).
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: podman-compose exec -T app uv run ruff check .
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format
+        entry: podman-compose exec -T app uv run ruff format --check .
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: mypy
+        name: mypy
+        entry: podman-compose exec -T app uv run mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
