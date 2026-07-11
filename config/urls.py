@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from config.frontend import index
 from config.health import health
 from integrations.mock_partner import mock_partner_orders
 from integrations.webhooks import partner_webhook
@@ -14,6 +15,7 @@ router = DefaultRouter()
 router.register("orders", OrderViewSet, basename="order")
 
 urlpatterns = [
+    path("", index),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("webhooks/partner/", partner_webhook),

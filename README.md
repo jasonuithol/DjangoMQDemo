@@ -43,6 +43,11 @@ make worker         # Celery worker (consumes from RabbitMQ)
 make flower         # task monitor on :5555
 ```
 
+Then open **http://localhost:8000/** for the hands-on UI: create an order and
+watch it flip `pending → synced` as the worker syncs it to the local mock
+partner, and send test webhooks. (The UI is a single Django-served page that
+loads React from a CDN — no build step; it needs browser internet access.)
+
 Then try the API with `api.http` (VS Code REST Client) or `curl`:
 
 ```bash
@@ -56,6 +61,7 @@ curl -s -X POST localhost:8000/api/orders/ \
 
 | URL | What |
 |---|---|
+| http://localhost:8000/ | **Hands-on UI** — create orders, watch them sync, send webhooks |
 | http://localhost:8000/api/orders/ | Orders REST API |
 | http://localhost:8000/webhooks/partner/ | Partner webhook receiver |
 | http://localhost:8000/health/ | Health check (DB round-trip) |
