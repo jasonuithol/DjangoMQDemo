@@ -1,0 +1,70 @@
+name: platform-service
+
+services:
+  # ---- app + tooling (Python/uv/Django/Celery live here) ----
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace          # your code, live-edited from the host
+      - venv:/opt/venv        # named volume: keeps the venv fast + off the host tree
+    env_file: .env
+    ports:
+      - "8000:8000"           # Django dev server
+      - "5555:5555"           # Flower
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sleep infinity
+
+  # ---- infrastructure ----
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: platform
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    # Run as the rabbitmq user directly. Under rootless podman the default
+    # (start as root, drop privileges) leaves .erlang.cookie owned by root and
+    # unreadable by the rabbitmq user (eacces). Starting as 999 sidesteps that.
+    user: "999:999"
+    ports:
+      - "5672:5672"           # AMQP
+      - "15672:15672"         # management UI (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  venv:
