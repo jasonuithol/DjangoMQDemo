@@ -5,9 +5,10 @@ description = "Demo Django/DRF/Celery platform service"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "celery[amqp]>=5.6.3",
+    "celery>=5.6.3",
     "django>=6.0.7",
     "django-environ>=0.14.0",
+    "django-stubs-ext>=6.0.6",
     "djangorestframework>=3.17.1",
     "psycopg[binary]>=3.3.4",
     "redis>=8.0.1",
@@ -26,11 +27,14 @@ dev = [
     "pytest-django>=4.12.0",
     "responses>=0.26.2",
     "ruff>=0.15.21",
+    "types-requests>=2.33.0.20260518",
 ]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# generated code we don't lint
+extend-exclude = ["**/migrations/*"]
 
 [tool.ruff.lint]
 # pycodestyle/pyflakes + isort + bugbear + upgrade + Django-specific rules
@@ -44,12 +48,29 @@ select = ["E", "F", "I", "B", "UP", "DJ"]
 python_version = "3.12"
 plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 strict = true
+# These fight untyped / partially-typed third-party libs at the boundaries:
+#   - celery's @shared_task is an untyped decorator
+#   - DRF serializers/viewsets and factory_boy are generic but not subscriptable
+disallow_any_generics = false
+disallow_untyped_decorators = false
 # generated code we don't type-check
 exclude = ['(^|/)migrations/']
 
 [[tool.mypy.overrides]]
-module = ["environ.*", "factory.*", "celery.*"]
+module = ["environ.*", "celery.*"]
 ignore_missing_imports = true
+
+# factory_boy ships partial types that don't export its public helpers cleanly;
+# treat it as untyped at the boundary.
+[[tool.mypy.overrides]]
+module = ["factory", "factory.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+# factories subclass the now-untyped DjangoModelFactory base.
+[[tool.mypy.overrides]]
+module = ["orders.factories"]
+disallow_subclassing_any = false
 
 [tool.django-stubs]
 django_settings_module = "config.settings.local"

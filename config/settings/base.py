@@ -6,7 +6,11 @@ Values come from the environment via django-environ (12-factor); see .env.exampl
 
 from pathlib import Path
 
+import django_stubs_ext
 import environ
+
+# Make django-stubs' generic aliases (ModelAdmin[Model], etc.) subscriptable at runtime.
+django_stubs_ext.monkeypatch()
 
 # repo root: config/settings/base.py -> parents[2]
 BASE_DIR = Path(__file__).resolve().parents[2]
