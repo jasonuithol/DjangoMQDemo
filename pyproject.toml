@@ -1,0 +1,61 @@
+[project]
+name = "platform-service"
+version = "0.1.0"
+description = "Demo Django/DRF/Celery platform service"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "celery[amqp]>=5.6.3",
+    "django>=6.0.7",
+    "django-environ>=0.14.0",
+    "djangorestframework>=3.17.1",
+    "psycopg[binary]>=3.3.4",
+    "redis>=8.0.1",
+    "requests>=2.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=6.0.6",
+    "djangorestframework-stubs>=3.17.0",
+    "factory-boy>=3.3.3",
+    "flower>=2.0.1",
+    "freezegun>=1.5.5",
+    "mypy>=2.2.0",
+    "pytest>=9.1.1",
+    "pytest-django>=4.12.0",
+    "responses>=0.26.2",
+    "ruff>=0.15.21",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# pycodestyle/pyflakes + isort + bugbear + upgrade + Django-specific rules
+select = ["E", "F", "I", "B", "UP", "DJ"]
+
+[tool.ruff.lint.per-file-ignores]
+# star-imports are the intended pattern in the settings layer
+"config/settings/*.py" = ["F403", "F405"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict = true
+# generated code we don't type-check
+exclude = ['(^|/)migrations/']
+
+[[tool.mypy.overrides]]
+module = ["environ.*", "factory.*", "celery.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.local"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "tests.py"]
+addopts = "--reuse-db"
+
