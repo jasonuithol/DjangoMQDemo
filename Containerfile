@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         make \
         postgresql-client \
+        procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Bring in uv from the official image (pinned by digest-less tag; fine for a dev box).
