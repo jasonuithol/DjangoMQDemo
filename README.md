@@ -45,8 +45,9 @@ make flower         # task monitor on :5555
 
 Then open **http://localhost:8000/** for the hands-on UI: create an order and
 watch it flip `pending → synced` as the worker syncs it to the local mock
-partner, and send test webhooks. (The UI is a single Django-served page that
-loads React from a CDN — no build step; it needs browser internet access.)
+partner, and send partner webhooks and watch them flip `pending → processed`
+in the events panel. (The UI is a single Django-served page that loads React
+from a CDN — no build step; it needs browser internet access.)
 
 Then try the API with `api.http` (VS Code REST Client) or `curl`:
 
@@ -63,6 +64,7 @@ curl -s -X POST localhost:8000/api/orders/ \
 |---|---|
 | http://localhost:8000/ | **Hands-on UI** — create orders, watch them sync, send webhooks |
 | http://localhost:8000/api/orders/ | Orders REST API |
+| http://localhost:8000/api/webhook-events/ | Received webhook events (read-only) |
 | http://localhost:8000/webhooks/partner/ | Partner webhook receiver |
 | http://localhost:8000/health/ | Health check (DB round-trip) |
 | http://localhost:8000/admin/ | Django admin (needs `make superuser`) |
@@ -88,9 +90,11 @@ Run `make help` for the full list of targets.
 ## Project layout
 
 ```
-config/            # project: split settings (base/local/test), celery.py, urls, health
+config/            # project: split settings (base/local/test), celery.py, urls, health, frontend view
 orders/            # Order model, DRF serializer/viewset, services.create_order, factory, admin
-integrations/      # PartnerClient, Celery tasks, webhook receiver, WebhookEvent model
+integrations/      # PartnerClient, Celery tasks, webhook receiver + read-only events API,
+                   #   WebhookEvent model, local mock partner (DEBUG)
+templates/         # index.html — the single-page hands-on UI (React via CDN)
 tests/             # pytest suite mirroring the apps
 compose.yaml       # the four-container pod
 Containerfile      # the app image (Python 3.12 + uv)
@@ -134,3 +138,8 @@ api.http           # example requests
   (`postgres`, `rabbitmq`, `redis`), not `localhost` — see `.env`.
 - **RabbitMQ** runs as uid 999 (`user: "999:999"` in `compose.yaml`) to avoid a
   rootless-podman Erlang-cookie permission error.
+- **Local mock partner:** in DEBUG the app serves a fake partner endpoint
+  (`/mock-partner/orders`) and `PARTNER_API_BASE_URL` points at it, so the sync
+  task succeeds end-to-end in dev. Tests pin the URL to a stubbed host instead.
+- **Dev processes:** `make run` and `make worker` run in the foreground; the app
+  image includes `procps`, so `pkill -f runserver` cleanly stops a stray server.
