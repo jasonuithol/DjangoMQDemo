@@ -7,6 +7,11 @@ via rootless **podman-compose**, so the host stays clean.
 
 ## Architecture
 
+<p align="center">
+  <img src="docs/architecture.svg" width="900"
+       alt="Browser to a Django app container (Django, Celery worker, Flower) over PostgreSQL, RabbitMQ and Redis; solid lines are synchronous HTTP/DB calls, dashed amber lines are Celery messages across the broker." />
+</p>
+
 A single pod of four containers:
 
 | Container | Image | Role |

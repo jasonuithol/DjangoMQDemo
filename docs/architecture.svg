@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640"
+     role="img" aria-labelledby="ttl desc">
+  <title id="ttl">platform-service architecture</title>
+  <desc id="desc">Browser to a Django app container (Django, Celery worker, Flower) over three
+    backing services: PostgreSQL, RabbitMQ and Redis. Solid lines are synchronous HTTP and database
+    calls; dashed amber lines are messages across the Celery broker.</desc>
+  <style>
+    .bg { fill:#0b1220; }
+    text { font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    .lane-box { fill:none; stroke:#33425c; stroke-width:1.4; stroke-dasharray:6 5; }
+    .lane-label { fill:#6f819a; font-family:ui-monospace,Menlo,Consolas,monospace;
+                  font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+    .node { fill:#1e293b; stroke:#33425c; stroke-width:1.4; }
+    .n-title { fill:#e6edf6; font-weight:600; font-size:15px; }
+    .n-sub { fill:#9fb0c6; font-size:11.5px; }
+    .n-sub.mono { font-family:ui-monospace,Menlo,Consolas,monospace; }
+    .edge { fill:none; stroke-width:1.9; }
+    .edge-sync  { stroke:#38bdf8; }
+    .edge-async { stroke:#fbbf24; stroke-dasharray:7 5; }
+    .edge-mon   { stroke:#64748b; stroke-width:1.4; stroke-dasharray:2 5; opacity:.85; }
+    .elabel { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+    .elabel.sync  { fill:#38bdf8; }
+    .elabel.async { fill:#fbbf24; }
+    .elabel.mon   { fill:#6f819a; }
+    .lbl-bg { fill:#0f1a2e; }
+    #ah-sync path  { fill:#38bdf8; }
+    #ah-async path { fill:#fbbf24; }
+    #ah-mon path   { fill:#64748b; }
+  </style>
+  <defs>
+    <marker id="ah-sync" markerWidth="9" markerHeight="9" refX="7" refY="3.4" orient="auto"><path d="M0,0 L7,3.4 L0,6.8 Z"/></marker>
+    <marker id="ah-async" markerWidth="9" markerHeight="9" refX="7" refY="3.4" orient="auto"><path d="M0,0 L7,3.4 L0,6.8 Z"/></marker>
+    <marker id="ah-mon" markerWidth="9" markerHeight="9" refX="7" refY="3.4" orient="auto"><path d="M0,0 L7,3.4 L0,6.8 Z"/></marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="960" height="640" rx="14"/>
+
+  <!-- lane labels -->
+  <text class="lane-label" x="30" y="34">client</text>
+  <text class="lane-label" x="252" y="34">app container — one image, three processes</text>
+  <text class="lane-label" x="625" y="34">infrastructure</text>
+
+  <!-- app container boundary -->
+  <rect class="lane-box" x="240" y="48" width="322" height="574" rx="14"/>
+
+  <!-- EDGES -->
+  <path class="edge edge-sync" d="M190,272 Q224,222 251,180" marker-end="url(#ah-sync)"/>
+  <path class="edge edge-mon" d="M190,314 Q220,432 251,540" marker-end="url(#ah-mon)"/>
+  <path class="edge edge-sync" d="M545,150 L621,150" marker-end="url(#ah-sync)"/>
+  <path class="edge edge-async" d="M545,214 Q600,272 621,338" marker-end="url(#ah-async)"/>
+  <path class="edge edge-async" d="M623,398 Q588,402 549,386" marker-end="url(#ah-async)"/>
+  <path class="edge edge-sync" d="M545,356 Q602,262 621,180" marker-end="url(#ah-sync)"/>
+  <path class="edge edge-sync" d="M545,420 Q600,470 621,516" marker-end="url(#ah-sync)"/>
+  <path class="edge edge-sync" d="M255,364 C198,352 198,232 251,222" marker-end="url(#ah-sync)"/>
+  <path class="edge edge-mon" d="M467,528 Q560,470 621,406" marker-end="url(#ah-mon)"/>
+  <path class="edge edge-mon" d="M467,556 Q560,556 621,548" marker-end="url(#ah-mon)"/>
+
+  <!-- NODES -->
+  <rect class="node" x="30" y="232" width="160" height="108" rx="11"/>
+  <circle cx="48" cy="258" r="4.5" fill="#38bdf8"/>
+  <text class="n-title" x="62" y="263">Browser</text>
+  <text class="n-sub" x="46" y="288">Single-page React UI</text>
+  <text class="n-sub mono" x="46" y="306">htm + esm.sh, no build</text>
+  <text class="n-sub" x="46" y="324">polls every 1.5s</text>
+
+  <rect class="node" x="255" y="98" width="290" height="150" rx="11"/>
+  <circle cx="275" cy="124" r="4.5" fill="#22c55e"/>
+  <text class="n-title" x="289" y="129">Django + DRF</text>
+  <text class="n-sub mono" x="273" y="150">runserver :8000</text>
+  <text class="n-sub" x="273" y="172">· serves the React page</text>
+  <text class="n-sub" x="273" y="190">· /api/orders/ · /api/webhook-events/</text>
+  <text class="n-sub" x="273" y="208">· /webhooks/partner/  (secret-checked)</text>
+  <text class="n-sub" x="273" y="226">· /mock-partner/  (DEBUG stand-in)</text>
+
+  <rect class="node" x="255" y="330" width="290" height="120" rx="11"/>
+  <circle cx="275" cy="356" r="4.5" fill="#fbbf24"/>
+  <text class="n-title" x="289" y="361">Celery worker</text>
+  <text class="n-sub mono" x="273" y="382">sync_order_to_partner</text>
+  <text class="n-sub mono" x="273" y="400">process_webhook_event</text>
+  <text class="n-sub" x="273" y="422">idempotent · acks_late</text>
+  <text class="n-sub" x="273" y="440">retry with backoff</text>
+
+  <rect class="node" x="255" y="500" width="212" height="94" rx="11"/>
+  <circle cx="275" cy="526" r="4.5" fill="#64748b"/>
+  <text class="n-title" x="289" y="531">Flower</text>
+  <text class="n-sub mono" x="273" y="552">:5555</text>
+  <text class="n-sub" x="273" y="574">read-only task monitor</text>
+
+  <rect class="node" x="621" y="98" width="309" height="112" rx="11"/>
+  <circle cx="641" cy="124" r="4.5" fill="#38bdf8"/>
+  <text class="n-title" x="655" y="129">PostgreSQL 16</text>
+  <text class="n-sub" x="639" y="152">system of record — orders + webhook events</text>
+  <text class="n-sub" x="639" y="172">Django ORM; the source of truth for status</text>
+  <text class="n-sub mono" x="639" y="192">volume: pgdata</text>
+
+  <rect class="node" x="621" y="300" width="309" height="120" rx="11"/>
+  <circle cx="641" cy="326" r="4.5" fill="#fbbf24"/>
+  <text class="n-title" x="655" y="331">RabbitMQ</text>
+  <text class="n-sub" x="639" y="354">Celery broker — the task queue</text>
+  <text class="n-sub" x="639" y="374">decouples web process from worker</text>
+  <text class="n-sub mono" x="639" y="394">:5672  ·  console :15672</text>
+
+  <rect class="node" x="621" y="475" width="309" height="112" rx="11"/>
+  <circle cx="641" cy="501" r="4.5" fill="#38bdf8"/>
+  <text class="n-title" x="655" y="506">Redis</text>
+  <text class="n-sub" x="639" y="529">Celery result backend</text>
+  <text class="n-sub" x="639" y="549">stores task return values / state</text>
+  <text class="n-sub mono" x="639" y="569">:6379</text>
+
+  <!-- EDGE LABELS (topmost; opaque chips seated in the gaps between cards) -->
+  <g><rect class="lbl-bg" x="561" y="137" width="46" height="15" rx="3"/><text class="elabel sync" x="565" y="148">orders</text></g>
+  <g><rect class="lbl-bg" x="556" y="223" width="56" height="15" rx="3"/><text class="elabel async" x="560" y="234">enqueue</text></g>
+  <g><rect class="lbl-bg" x="556" y="314" width="60" height="15" rx="3"/><text class="elabel sync" x="560" y="325">&#8594; synced</text></g>
+  <g><rect class="lbl-bg" x="558" y="384" width="50" height="15" rx="3"/><text class="elabel async" x="562" y="395">deliver</text></g>
+  <g><rect class="lbl-bg" x="574" y="457" width="46" height="15" rx="3"/><text class="elabel sync" x="578" y="468">result</text></g>
+  <g><rect class="lbl-bg" x="196" y="187" width="42" height="15" rx="3"/><text class="elabel sync" x="200" y="198">:8000</text></g>
+  <g><rect class="lbl-bg" x="198" y="486" width="42" height="15" rx="3"/><text class="elabel mon" x="202" y="497">:5555</text></g>
+  <g transform="rotate(-90 210 300)">
+    <rect class="lbl-bg" x="140" y="292" width="140" height="16" rx="3"/>
+    <text class="elabel sync" x="210" y="304" text-anchor="middle">mock partner &#183; DEBUG</text>
+  </g>
+</svg>
