@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 712" width="960" height="712"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 744" width="960" height="744"
      role="img" aria-labelledby="ttl desc">
   <title id="ttl">platform-service architecture</title>
   <desc id="desc">Browser to a Django app container (Django, Celery worker, Flower) over three
@@ -7,7 +7,7 @@
   <style>
     .bg { fill:#0b1220; }
     text { font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-    .lane-box { fill:none; stroke:#33425c; stroke-width:1.4; stroke-dasharray:6 5; }
+    .container-frame { fill:none; stroke:#89a0c4; stroke-opacity:.5; stroke-width:5; }
     .lane-label { fill:#6f819a; font-family:ui-monospace,Menlo,Consolas,monospace;
                   font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
     .node { fill:#1e293b; stroke:#33425c; stroke-width:1.4; }
@@ -34,15 +34,19 @@
     <marker id="ah-mon" markerWidth="9" markerHeight="9" refX="7" refY="3.4" orient="auto"><path d="M0,0 L7,3.4 L0,6.8 Z"/></marker>
   </defs>
 
-  <rect class="bg" x="0" y="0" width="960" height="712" rx="14"/>
+  <rect class="bg" x="0" y="0" width="960" height="744" rx="14"/>
 
   <!-- lane labels -->
   <text class="lane-label" x="30" y="34">client</text>
   <text class="lane-label" x="252" y="34">app container — one image, three processes</text>
   <text class="lane-label" x="625" y="34">infrastructure</text>
 
-  <!-- app container boundary -->
-  <rect class="lane-box" x="240" y="48" width="322" height="574" rx="14"/>
+  <!-- container frames — sharp, semi-transparent grey-blue border = "runs in its own container".
+       The app frame wraps THREE process cards (one image, three processes); each infra card is its own container. -->
+  <rect class="container-frame" x="243" y="86"  width="314" height="520"/>
+  <rect class="container-frame" x="613" y="90"  width="325" height="128"/>
+  <rect class="container-frame" x="613" y="292" width="325" height="136"/>
+  <rect class="container-frame" x="613" y="467" width="325" height="128"/>
 
   <!-- EDGES -->
   <path class="edge edge-sync" d="M190,272 Q224,222 251,180" marker-end="url(#ah-sync)"/>
@@ -123,11 +127,13 @@
 
   <!-- LEGEND -->
   <line x1="40" y1="656" x2="920" y2="656" stroke="#26344b" stroke-width="1"/>
-  <text class="lane-label" x="40" y="684">key</text>
-  <line class="edge edge-sync"  x1="96"  y1="680" x2="130" y2="680"/>
-  <text class="leg" x="140" y="684">synchronous HTTP / DB query</text>
-  <line class="edge edge-async" x1="410" y1="680" x2="444" y2="680"/>
-  <text class="leg" x="454" y="684">async message via broker</text>
-  <line class="edge edge-mon"   x1="690" y1="680" x2="724" y2="680"/>
-  <text class="leg" x="734" y="684">monitoring (read-only)</text>
+  <text class="lane-label" x="40" y="690">key</text>
+  <rect class="container-frame" x="98" y="676" width="20" height="20"/>
+  <text class="leg" x="132" y="690">sharp grey-blue frame = runs in its own container</text>
+  <line class="edge edge-sync"  x1="98"  y1="716" x2="132" y2="716"/>
+  <text class="leg" x="142" y="720">synchronous HTTP / DB query</text>
+  <line class="edge edge-async" x1="392" y1="716" x2="426" y2="716"/>
+  <text class="leg" x="436" y="720">async message via broker</text>
+  <line class="edge edge-mon"   x1="672" y1="716" x2="706" y2="716"/>
+  <text class="leg" x="716" y="720">monitoring (read-only)</text>
 </svg>
