@@ -25,6 +25,37 @@ Your working tree is bind-mounted into `app` at `/workspace`, so edits on the
 host are live inside the container. The virtualenv lives in a named volume at
 `/opt/venv`, off the host tree.
 
+### How a request flows
+
+Two paths run through the same stack: a synchronous request path, and an
+asynchronous background path that the broker decouples from the web process.
+
+**Order sync** — create an order and watch its badge flip `pending → synced`:
+
+1. Browser `POST`s to `/api/orders/`; the DRF serializer validates `total_amount > 0`.
+2. `create_order()` saves the order as **pending** in PostgreSQL.
+3. On `transaction.on_commit`, `sync_order_to_partner.delay(id)` publishes a task
+   to RabbitMQ — passing the *id*, never the ORM object.
+4. The Celery worker consumes it, re-loads the order by id (idempotent), and
+   `POST`s it through `PartnerClient`.
+5. In DEBUG the "partner" is Django's own `/mock-partner/` endpoint, so the call
+   succeeds locally.
+6. The worker sets the order to **synced** in PostgreSQL and stores the task
+   result in Redis. On failure it retries with backoff, then **failed**.
+7. The polling React UI reflects the new status within ~1.5s.
+
+**Webhook processing** — send a partner webhook and watch the event flip
+`pending → processed`:
+
+1. Caller `POST`s to `/webhooks/partner/` with an `X-Partner-Secret` header.
+2. Django compares the secret with `hmac.compare_digest`; a mismatch returns
+   `401` and stores nothing.
+3. The payload is persisted as a `WebhookEvent` (unprocessed); the request
+   returns `202` immediately — no slow work in the handler.
+4. On commit, `process_webhook_event.delay(id)` enqueues to RabbitMQ.
+5. The worker picks it up and marks the event **processed**.
+6. The events panel (reading `/api/webhook-events/`) shows the transition.
+
 ## Prerequisites
 
 - **podman** (rootless) and **podman-compose** (`uv tool install podman-compose`)
